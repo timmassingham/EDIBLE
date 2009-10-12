@@ -287,11 +287,12 @@ while(a<argc && *argv[a]=='-'){
 
 /* We have arguments left over, something nasty has happened!*/
 if(a!=argc-2){
-  printf("\tWrong amount of arguments!\n"
+  printf("\tWrong number of arguments!\n"
          "(Non-optimized version)\n\n"
          "  Usage:  edible <-s [sample_file] sample_size sequence_length percentile>"   
          "\n\t<-m matrix_file> <-p prob_file> <-t> <-b boot_strap_size> <-d>\n"
-	 "\t <-h pi_a pi_c pi_g pi_t kappa> <-k> <-c cache_size> tree_file output_file \n\n"
+	 "\t <-h pi_a pi_c pi_g pi_t kappa> <-g pi_a pi_c pi_g pi_t GTR_parameters>\n"
+    "\t<-r ncat rates probs> <-k> <-c cache_size> tree_file output_file \n\n"
          "  matrix_file is file to dump expectation matrices to.\n"
          "  prob_file is file to dump probabilities to.\n"
          "  sample_file is file to dump sampled distribution to. Optional.\n"
@@ -302,8 +303,10 @@ if(a!=argc-2){
 	 "  boot_strap_size is the size of the sample to use in estimations\n"
 	 "  -d want determinate of information about several parameters specified\n"
 	 "  -h uses the HKY85 model rather than the JC model of nucleotide substitution\n"
-	 " pi_? is the base frequency of the nucleotide ?. Kappa is the transition bias\n"
-         "  -k don't calculate the information WRT kappa in the HKY85 model\n"
+	 "pi_? is the base frequency of the nucleotide ?. Kappa is the transition bias\n"
+    "  -g use GTR model of nucleotide substitution, see documentation for details\n"
+    "  -r use ncat categories of rate varation, rates and probabilities given\n"
+    "  -k don't calculate the information WRT kappa in the HKY85 model\n"
 	 "  cache_size is the amount of sequences to store results for when sampling\n\n");
   exit(2);
 }

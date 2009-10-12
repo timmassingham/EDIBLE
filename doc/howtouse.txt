@@ -7,39 +7,11 @@ computer program written in (hopefully strict) ANSI C to implement experimental
 design ideas by Nick Goldman from his 1998 paper "Experimental Design in
 Molecular Phylogenetics".
 
-(At least) two versions of EDIBLE exist. One version takes advantage of
-symmetry of the JC; the other is a bit slower (by a constant factor) but
-should be easier to adapt for new models.
-      An experimental version using a more efficient, but more costly in
-memory terms, algorithm is also available. This is far faster, especially
-for "bushy" trees but can't handle any calculations relating to kappa
-(transition/transversion ratio) in the HKY model.
-
 
   * To compile
 
-    An (extremely simple) batch file "Compiler" is provided that should do
-  the deed. For completeness,
-
-   cc -Ox -o pcalc/pcalc pcalc/pcalc.c
-   cc -lm -Ox -o edible *.c
-
-    should do the trick (assuming that no other c files are in the current
-  directory) Where x is whichever optimization is required (3 normally
-  does the trick.)
-
-  * Files in edible.tgz
-
-    edible.c		llh.c		matrix.c
-    options.c		partial.c	pcalc/pcalc.c
-    random.c		read.c		tree.c
-    utility.c
-
-    edible.h		variables.h
-
-    howtouse.txt	implementation.txt
-
-    Compiler
+cd src
+make
 
 
 		Command line options
@@ -52,8 +24,8 @@ of allowing it to be scripted.)
 
 Usage:  edible <-s [sample_file] sample_size sequence_length percentile> 
           <-m matrix_file> <-p prob_file> <-t> <-b boot_strap_size> <-d>
-          <-h pi_a pi_c pi_g pi_t kappa> <-k> <-c cache_size>
-	  tree_file output_file
+          <-h pi_a pi_c pi_g pi_t kappa> <-g pi_a pi_c pi_g pi_t GTR_parameters>
+          <-r ncat rates probs> <-k> <-c cache_size> tree_file output_file
 
   "tree_file" is the name of the file which should contain a tree in 
 bracket-colon format (see below) If not, bad things happen.
@@ -106,8 +78,22 @@ the information of that parameter about itself is returned.
   "h" tells EDIBLE to use HKY85 model of nucleotide substitution rather than
 JC. "pi_a", "pi_c", "pi_g", "pi_t" are the base frequencies of certain
 nucleotides. "kappa" is the transition/transversion ratio. Implementation
-of more bases is left to those who feel the need - to such persons, I
-have a genuine Roswell sample they can have for a small fee.
+of more bases is left to those who feel the need.
+
+  "g" use the GTR model of nucleotide substitution. The base frequencies are
+  given as for HKY85. The five parameters for the substitution matrix should
+  be in the same order as PAML: T<->C T<->A T<->G C<->A C<->G normalised so
+  A<->G equals 1.0
+
+  "r" calculate information using rate variation. The number of categories,
+  ncat, and the rate and proportion of sites for each category must also be
+  specified. Rates must be positive and proportions must sum to 1.
+  E.g. -r 3 0.5 1.0 2.0 0.1 0.7 0.2
+  Three categories with rates 0.5, 1.0 and 2.0. The proportion of sites in
+  each category is 0.1, 0.7 and 0.2 respectively.
+  Note: this calculation is different from the calculating the information 
+  separately for each rate category then forming a weighted sum, which would i
+  be the information if we were told which category each site was in.
 
   "k" turns _off_ calculations for information about kappa (this way round
 is sensible, regardless of what the boss thinks.)
