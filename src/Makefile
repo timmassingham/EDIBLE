@@ -22,7 +22,10 @@ pcalc: pcalc/pcalc.o
 .f.o:
 	g77 -O3 -o $@ -c $<
 clean:
-	rm -f *~ *.o  *.obj  *.exe *.lib  pcalc/pcalc.o && cd Meschach && make clean && rm meschach.a
+	rm -f *~ *.o  *.obj  *.exe *.lib  pcalc/pcalc.o && cd Meschach && make clean && rm -f meschach.a
 
 Meschach/meschach.a:
 	cd Meschach && ./configure && make basic
+
+archive:
+	make clean && cd ../.. && tar zcf edible.tgz --exclude=.git --exclude=bin --exclude=archive edible
