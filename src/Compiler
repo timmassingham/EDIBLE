@@ -1,8 +1,0 @@
-#!/bin/sh
-# remove any stale object files or executables.
-rm *.o edible Meschach/*.o Meschach/*.a
-
-# do the complilation
-cd Meschach ; ./configure ; make basic ; cd ..
-cc -O3 -fomit-frame-pointer -Wall -funroll-loops -DNDEBUG -o edible -lm  edible.c read.c utility.c tree.c random.c llh.c partial.c matrix.c options.c new_models.c gtr.c Meschach/meschach.a
-cc -O3 -funroll-loops -Wall -o pcalc/pcalc pcalc/pcalc.c
