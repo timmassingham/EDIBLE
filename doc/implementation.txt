@@ -1,0 +1,125 @@
+	Implementation in EDIBLE Algorithms
+	-----------------------------------
+
+1. Over view of methods.
+
+  The two main versions of the program (non-experimental) use the fairly
+slow, but low memory use technique, of recalculating the tree for every
+possible combination of nucleotides (modulo symmetries.) The probability
+of the tree generating a given combination can be calculated efficiently
+using the "pruning algorithm" of Felsenstein (1981 - read the paper for
+a far more lucid explanation than I could give.)
+  The derivatives can be calculated in a similar manner using the 
+equations in Goldman (1998) but in practice most of the calculations needed
+have already been carried out when calculating the probability and so
+only those between the branch in question and the "calculation root" need
+to be recalculated. With derivatives involving more than one branch (needed
+if anything other than expected information is required) this saving is
+more difficult to implement and yields a far smaller gain, so is not
+used. 
+  Derivatives WRT Kappa (transition/transversion ratio in HKY85 model)
+cannot be calculated in this manner since Kappa occurs in more than one 
+branch - the pruning algorithm cannot be used so simply.
+I have settled for using a finite difference approximation in this case,
+although I believe that the it may be worked out exactly using the
+pruning algorithm a number of times of the order of the number of branches.
+(and hence slower than an finite difference method.)
+  For completion: (evaluated at Ka(ppa)=K, k is a small change in Kappa.)
+
+  dP(K)    P(K+k)-P(K-k)
+  ----- =  ------------- + O(k^2)
+   dKa         2*k
+
+  d^2 P(K)   P(K+k) + P(K-k) - 2*P(K)
+  -------- = ------------------------  + O(k^2)
+   dKa^2               k^2
+
+   These provide an extremely good approximation to the derivatives since
+the probability function is smooth for a fixed topology.
+
+  Another method would be to modify the pruning algorithm and calculate all
+possible combinations as we recurse up the tree. At any node, we calculate 
+that probability that the nucleotides at the "child leaves" are generated 
+from a given nucleotide, for all possible combinations of nucleotides at the
+"child leaves".
+  Although far more efficient than the previous method, we need to store all
+the probabilities, derivatives (and possibly second derivatives) at each
+step - memory requirements are more than exponential in the number of leaves
+(in fact O(n^2 4^n) where n is the number of leaves.) Even small trees will
+exceed the capacity of a typical PC. To cope with this, the experimental
+version of EDIBLE employs a halfway house approach - using the "efficient"
+method for the first couple of steps (from the deepest part of the tree) and
+the "inefficient" method from then on, reducing the effective size of the
+tree for pruning by a considerable amount.
+
+2. Symmetry in JC
+
+  The JC model of nucleotide substitution is very symmetrical and
+allow us to reduce the number of combinations we have to calculate by
+a factor approaching 24 asymptotically.
+
+  For a given combination of nucleotides the JC model is invariant under
+permutation of the bases.
+
+  The optimized and experimental versions of EDIBLE take advantage of 
+this symmetry.
+
+  Similar symmetry savings can be made in the HKY model, but only if the
+base frequences of the purines and/or the pyrimidines are the same. These
+haven't been implemented since the saving is smaller (2/4 for one/both 
+groups with same base frequency) and (hopefully) rarer.
+
+3. Towards implementing topological similarities
+  (Not implemented in any version of EDIBLE.)
+
+  Some trees possess symmetries in their structure, although these may
+rarely, if ever, occur in nature (perhaps the important exception being 
+when two leaves join in a clock-like tree) calculations could be reused to
+save time. The saving (at least as this program stands) would be of the order
+of a constant multiplier.
+  Perhaps the best way to implement this (requiring the least alterations
+to the code ;-) would be to modify the tree_sequence routine in utility.c 
+to a take into account topological symmetry before the calculation even
+starts, returning a multiplier. The experimental version of EDIBLE might be
+altered to remove entire subtrees from the calculation, massively reducing 
+the amount of calculation.
+  Although it would be possible to analyse the input to find symmetries in
+the tree, it would perhaps be best to change the input format and allow the
+user to explicit state structure in the tree.
+eg:
+STREE1=A:0.2
+STREE2=(STREE1,STREE1,B:0.3):0.2
+STREE3=(STREE2,STREE1):0.4
+(STREE3,STREE2,C:0.1)
+
+  Would give the tree:
+(((A:0.2,A:0.2,B:0.3):0.2,A:0.2):0.4,(A:0.2,A:0.2,B:0.3):0.2,C:0.1)
+with all the symmetry to be used apparent from the recursive format.
+  Problems with leaves having the same name would have to be worked around.
+
+4. Miscellaneous other bits
+
+  In the experimental version of EDIBLE, the symmetries of the substitution
+models are not taken into account during the initial set of calculations.
+While this would be more difficult and less advantages to implement than the
+current method, it can be used in conjunction with it to reduce calculation
+and memory requirements.
+
+Glossary
+--------
+  "calculation root" - hypothetical root from which calculations occur. 
+Choice of root doesn't effect the outcome of the calculation when using
+a time reversible model (Felsenstein 1981)
+  "child nodes" - all nodes connected to a given node and their "child nodes",
+moving away from the "calculation root"
+  "child leaves" - all leaves that are "child nodes" of a given node.
+
+References
+----------
+
+Felsenstein,J. 1981 Evolutionary trees from DNA sequences: a maximum
+  likelihood approach. J. Mol. Evol.17, 368-376
+Goldman N. 1998 Experimental design in molecular phylogenetics
+** HKY paper **
+Jukes, T.H. & Cantor C.R. 1969 Evolution of protein molecules. In:
+  Mammalian protein metabolism, vol 3 21-132
