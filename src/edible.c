@@ -251,7 +251,7 @@ while(a<argc && *argv[a]=='-'){
             rate_cat = calloc(nrates,sizeof(double));
             for ( r=0 ; r<nrates ; r++){
               sscanf(argv[a++],"%le",&rate_cat[r]);
-              if ( rate_cat[r]<=0.){
+              if ( rate_cat[r]<0.){
                 printf ("Rate is less than zero (%e).\n",rate_cat[r]);
                 exit(EXIT_FAILURE);
               }
