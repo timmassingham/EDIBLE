@@ -260,15 +260,18 @@ while(a<argc && *argv[a]=='-'){
             for ( r=0 ; r<nrates ; r++){
               sscanf(argv[a++],"%le",&rate_prob[r]);
               tot += rate_prob[r];
-              if ( rate_prob[r]<=0. || rate_prob[r]>=1.){
+              if ( rate_prob[r]<0. || rate_prob[r]>1.){
                 printf ("Error in prior probability of rate %e. Probability is %e\n",rate_cat[r],rate_prob[r]);
                 exit(EXIT_FAILURE);
               }
             }
-            if ( fabs(1.-tot)>DBL_EPSILON*nrates){
+	    for ( r=0 ; r<nrates ; r++){
+	        rate_prob[r] /= tot;
+	    }
+            /*if ( fabs(1.-tot)>DBL_EPSILON*nrates){
               printf ("Rate prior probabilities do not sum to one.\n");
               exit(EXIT_FAILURE);
-            }
+            }*/
             
             break;
   case 'g': a++;
