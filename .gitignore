@@ -1,2 +1,7 @@
 *.o
 *~
+*.a
+test/
+edible/
+edible.tgz
+development
