@@ -505,7 +505,7 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
   case 0:
   case ROOTED:
   case DETINDIV:outstring=calloc(34,sizeof(char));
-	    string=strcpy(outstring,"Determinant of expectation matrix");
+	    string=strcpy(outstring,"Log-determinant of expectation matrix");
 	    break;
   case INDIVIDUAL:   outstring=calloc(25,sizeof(char));
 	    string=strcpy(outstring,"Information about branch");
@@ -514,10 +514,10 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
 	    string=strcpy(outstring,"Information about parameter");
 	    break;
   case DETINDIV+INDIVIDUAL:outstring=calloc(32,sizeof(char));
-	    string=strcpy(outstring,"Determinate of several branches");
+	    string=strcpy(outstring,"Log-determinate of several branches");
 	    break;
   case DETINDIV+INDIVIDUAL+ROOTED:outstring=calloc(34,sizeof(char));
-	    string=strcpy(outstring,"Determinate of several parameters");
+	    string=strcpy(outstring,"Log-determinate of several parameters");
 	    break;
   }
 

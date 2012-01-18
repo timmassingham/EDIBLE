@@ -46,10 +46,10 @@ char *itotext(int n,char *s){
 }
 
 
-/*  Routine to take the matrix given and calculate the
+/*  Routine to take the matrix given and calculate the log-
  * determinant, by calling LU decomposition routine and
  * then multiplying down diagonals. Returns the
- * determinant calculated.*/
+ * log-determinant calculated.*/
 double (*determinant(void))[]{
   int a,pivots,max,c;
   extern int branches;
@@ -63,6 +63,7 @@ double (*determinant(void))[]{
   extern int is_kappa;
   double (*(*matrix)[])[];
   double (*(*matrix2)[])[];
+  int sign;
 
   is_kappa=0;
   if(ISMODE(HKY) && NOTMODE(NOKAPPA))
@@ -123,18 +124,21 @@ double (*determinant(void))[]{
   /*  Perform LU decomposition on whichever matrix we've been handed*/
   det=calloc(1+is_kappa,sizeof(double));
   pivots=ludecomp(matrix,max);
-  if(pivots==-1) /* "Error" - matrix is singular*/
     (*det)[0]=0;
-  else
-    (*det)[0]=1;
 
   /*  The determinant of the matrix is the product of
    * the diagonal elements of the decomposed form*/
-  for(a=0;a<max;a++)
-    (*det)[0]*=(*(*matrix)[a])[a];
-  (*det)[0]*=1-2*(pivots%2);
+  sign = 0;
+  for(a=0;a<max;a++){
+    (*det)[0] += log(fabs((*(*matrix)[a])[a]));
+    if(((*(*matrix)[a])[a])<0.0){
+      sign = sign + 1;
+    }
+  }
+  sign += (pivots%2);
+  (*det)[0] = (sign%2) ? -(*det)[0] : (*det)[0];
   if(is_kappa==1)
-    (*det)[1]=(*(*matrix)[max])[max];
+    (*det)[1]= log((*(*matrix)[max])[max]);
 
   return det;
 }
