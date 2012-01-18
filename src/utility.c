@@ -5,6 +5,9 @@
 #include "edible.h"
 #include <string.h>
 #include <time.h>
+#include "Meschach/matrix.h"
+#include "Meschach/matrix2.h"
+
 
 /* Calculate x^y, returning an integer.
  * No overflow checking*/
@@ -50,10 +53,10 @@ char *itotext(int n,char *s){
  * determinant, by calling LU decomposition routine and
  * then multiplying down diagonals. Returns the
  * log-determinant calculated.*/
-double (*determinant(void))[]{
-  int a,pivots,max,c;
+double * determinant(void){
+  int a,max,c;
   extern int branches;
-  double (*det)[];
+  double *det;
   extern int mode;
   extern int nodecount;
   extern double (*(*expect)[])[];
@@ -62,8 +65,7 @@ double (*determinant(void))[]{
   extern int interesting_branches[];
   extern int is_kappa;
   double (*(*matrix)[])[];
-  double (*(*matrix2)[])[];
-  int sign;
+  MAT * matrix2;
 
   is_kappa=0;
   if(ISMODE(HKY) && NOTMODE(NOKAPPA))
@@ -87,9 +89,9 @@ double (*determinant(void))[]{
     if(NOTMODE(DETINDIV)){
       det=calloc(individual+is_kappa,sizeof(double));
       for(a=0;a<individual;a++)
-        (*det)[a]=(*(*matrix)[interesting_branches[a]])[interesting_branches[a]];
+        det[a]=(*(*matrix)[interesting_branches[a]])[interesting_branches[a]];
       if(is_kappa==1)
-	(*det)[individual]=(*(*matrix)[max])[max];
+	det[individual]=(*(*matrix)[max])[max];
       is_kappa=0;
       return det;
     }
@@ -97,48 +99,52 @@ double (*determinant(void))[]{
     /*  Case - we want the determinate of the sub-matrix formed 
      * by several parameters*/
     /*  Get memory for new matrix*/
-    matrix2=calloc(individual+is_kappa,sizeof(double *));
-    if(matrix2==NULL)
-      nomemory();
-    for(a=0;a<individual+is_kappa;a++){
-      (*matrix2)[a]=calloc(individual+is_kappa,sizeof(double));
-      if((*matrix2)[a]==NULL)
-	nomemory();
+    matrix2 = m_get(individual+is_kappa,individual+is_kappa);
+    if(NULL==matrix2){
+	    nomemory();
     }
+    m_zero(matrix2);
+
 
     /*  Creates the sub-matrix from the original expected information
      * matrix*/
     for(a=0;a<individual;a++)
       for(c=0;c<individual;c++)
-	(*(*matrix2)[a])[c]=(*(*matrix)[interesting_branches[a]])[interesting_branches[c]];
-    if(is_kappa==1)
-      (*(*matrix2)[individual])[individual]=(*(*matrix)[max])[max];
+	matrix2->me[a][c]=(*(*matrix)[interesting_branches[a]])[interesting_branches[c]];
+    if(is_kappa==1){
+      matrix2->me[individual][individual]=(*(*matrix)[max])[max];
+    }
     
-    matrix=matrix2;
     max=individual;
-
     if(ISMODE(MATRICES))
-      dump(matrix,max,"Sub-matrix to be calculated");
+      dump(matrix2->me,max,"Sub-matrix to be calculated");
+  } else {
+      matrix2 = m_get(max,max);
+      if(NULL==matrix2){
+          nomemory();
+      }
+      m_zero(matrix2);
+      for ( a=0 ; a<max ; a++){
+          for ( c=0 ; c<max ; c++){
+              matrix2->me[a][c] = (*(*matrix)[a])[c];
+          }
+      }
   }
  
   /*  Perform LU decomposition on whichever matrix we've been handed*/
   det=calloc(1+is_kappa,sizeof(double));
-  pivots=ludecomp(matrix,max);
-    (*det)[0]=0;
+  matrix2=CHfactor(matrix2);
 
   /*  The determinant of the matrix is the product of
    * the diagonal elements of the decomposed form*/
-  sign = 0;
   for(a=0;a<max;a++){
-    (*det)[0] += log(fabs((*(*matrix)[a])[a]));
-    if(((*(*matrix)[a])[a])<0.0){
-      sign = sign + 1;
-    }
+    det[0] += 2.0 * log(matrix2->me[a][a]);
   }
-  sign += (pivots%2);
-  (*det)[0] = (sign%2) ? -(*det)[0] : (*det)[0];
-  if(is_kappa==1)
-    (*det)[1]= log((*(*matrix)[max])[max]);
+  if(is_kappa==1){
+    det[1] = 2.0 * log(matrix2->me[max][max]);
+  }
+
+  M_FREE(matrix2);
 
   return det;
 }

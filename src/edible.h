@@ -83,7 +83,7 @@ void pcalc_branch(struct treenode *node_p);
 int ipow(int x, int y);
 void nomemory(void);
 char *itotext(int n,char *s);
-double (*determinant(void))[];
+double * determinant(void);
 int ludecomp(double (*(*matrix)[])[],int max);
 char getnextc(FILE *fp);
 void print_nucleotide(int nucleo, FILE *fp);
