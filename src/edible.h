@@ -109,7 +109,7 @@ void standard(struct treenode *node_p,FILE *file_p,unsigned int e);
 void growtree(struct treenode *node_p,FILE *file_p,unsigned int e);
 void growbranch(struct treenode *node_p,FILE *file_p,unsigned int e);
 void greasebranch(struct treenode *node_p,FILE *file_p,unsigned int e);
-double (*find_information(struct treenode *tree, struct treenode *tree2, unsigned int e, int factor_flag, double factor))[];
+double *find_information(struct treenode *tree, struct treenode *tree2, unsigned int e, int factor_flag, double factor);
 
 /* Functions from tree.c*/
 struct treenode *treecopy(struct treenode *node2_p,int flag);

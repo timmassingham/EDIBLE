@@ -86,7 +86,7 @@ double sample_percentile(struct treenode *node_p, struct treenode *tree2,unsigne
  * randomly.*/
 double randomresult(struct treenode *node_p, struct treenode *tree,double (*(*partial)[])[],unsigned int e,int sequence,int factor_flag,double factor){
   int a,c,d;
-  double (*data)[];
+  double *data;
   double b;
   extern int branches;
   extern double (*(*expect)[])[];
@@ -125,9 +125,9 @@ double randomresult(struct treenode *node_p, struct treenode *tree,double (*(*pa
   data=determinant();
 
   if(ISMODE(HKY) && NOTMODE(NOKAPPA))
-     b=(*data)[1];
+     b=data[1];
   else
-    b=(*data)[0];
+    b=data[0];
   
   free(data);
   return b;

@@ -3,7 +3,7 @@
  *        (*P)[a] = is a pointer to an array of doubles (a is int)
  *        (*(*P)[a])[b] = is a double, (a,b) in the array*/
 
-  double (*det)[];
+  double *det;
   double factor;
   int factor_flag;
   

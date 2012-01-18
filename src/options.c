@@ -33,9 +33,9 @@ void standard(struct treenode *node_p,FILE *file_p,unsigned int e){
     b=individual;
   
   for(a=0;a<b;a++)
-    fprintf(file_p,"%s = %1.11E\n",outstring,(*det)[a]);
+    fprintf(file_p,"%s = %1.11E\n",outstring,det[a]);
   if(ISMODE(HKY) && NOTMODE(NOKAPPA) && NOTMODE(PERCENTILE))
-    fprintf(file_p,"Information about Kappa = %1.11E\n",(*det)[b]);
+    fprintf(file_p,"Information about Kappa = %1.11E\n",det[b]);
 
   free(det);
 }
@@ -154,18 +154,18 @@ void growtree(struct treenode *node_p,FILE *file_p,unsigned int e){
     
     if(ISMODE(INDIVIDUAL)){
       if(ISMODE(DETINDIV)){
-	fprintf(file_p,"\t\t\t%E\tD(",(*det)[0]);
+	fprintf(file_p,"\t\t\t%E\tD(",det[0]);
 	for(a=0;a<b-1;a++)
 	  fprintf(file_p,"%d,",interesting_branches[a]);
 	fprintf(file_p,"%d)\n",interesting_branches[a]);
       }else
 	for(a=0;a<b;a++)
-	  fprintf(file_p,"\t\t\t%E\t%d\n",(*det)[a],interesting_branches[a]);
+	  fprintf(file_p,"\t\t\t%E\t%d\n",det[a],interesting_branches[a]);
     }else
-      fprintf(file_p,"\t\t\t%E\tD\n",(*det)[0]);
+      fprintf(file_p,"\t\t\t%E\tD\n",det[0]);
     
     if(ISMODE(HKY) && NOTMODE(NOKAPPA) && NOTMODE(PERCENTILE))
-      fprintf(file_p,"\t\t\t%E\tKappa\n",(*det)[b]);
+      fprintf(file_p,"\t\t\t%E\tKappa\n",det[b]);
     free(det);
   }
 }
@@ -309,18 +309,18 @@ void growbranch(struct treenode *node_p,FILE *file_p,unsigned int e){
     
     if(ISMODE(INDIVIDUAL)){
       if(ISMODE(DETINDIV)){
-	fprintf(file_p,"\t\t\t%E\tD(",(*det)[0]);
+	fprintf(file_p,"\t\t\t%E\tD(",det[0]);
 	for(a=0;a<b-1;a++)
 	  fprintf(file_p,"%d,",interesting_branches[a]);
 	fprintf(file_p,"%d)\n",interesting_branches[a]);
       }else
 	for(a=0;a<b;a++)
-	  fprintf(file_p,"\t\t\t%E\t%d\n",(*det)[a],interesting_branches[a]);
+	  fprintf(file_p,"\t\t\t%E\t%d\n",det[a],interesting_branches[a]);
     }else
-      fprintf(file_p,"\t\t\t%E\tD\n",(*det)[0]);
+      fprintf(file_p,"\t\t\t%E\tD\n",det[0]);
     
     if(ISMODE(HKY) && NOTMODE(NOKAPPA) && NOTMODE(PERCENTILE))
-      fprintf(file_p,"\t\t\t%E\tKappa\n",(*det)[b]);
+      fprintf(file_p,"\t\t\t%E\tKappa\n",det[b]);
     free(det);
   }
 }
@@ -683,24 +683,24 @@ void greasebranch(struct treenode *node_p,FILE *file_p,unsigned int e){
     
     if(ISMODE(INDIVIDUAL)){
       if(ISMODE(DETINDIV)){
-	fprintf(file_p,"\t\t\t%E\tD(",(*det)[0]);
+	fprintf(file_p,"\t\t\t%E\tD(",det[0]);
 	for(a=0;a<b-1;a++)
 	  fprintf(file_p,"%d,",interesting_branches[a]);
 	fprintf(file_p,"%d)\n",interesting_branches[a]);
       }else
 	for(a=0;a<b;a++)
-	  fprintf(file_p,"\t\t\t%E\t%d\n",(*det)[a],interesting_branches[a]);
+	  fprintf(file_p,"\t\t\t%E\t%d\n",det[a],interesting_branches[a]);
     }else
-      fprintf(file_p,"\t\t\t%E\tD\n",(*det)[0]);
+      fprintf(file_p,"\t\t\t%E\tD\n",det[0]);
     
     if(ISMODE(HKY) && NOTMODE(NOKAPPA) && NOTMODE(PERCENTILE))
-      fprintf(file_p,"\t\t\t%E\tKappa\n",(*det)[b]);
+      fprintf(file_p,"\t\t\t%E\tKappa\n",det[b]);
     free(det);
   }
 }
 
 
-double (*find_information(struct treenode *tree,struct treenode *tree2,unsigned int e, int factor_flag, double factor))[]{
+double *find_information(struct treenode *tree,struct treenode *tree2,unsigned int e, int factor_flag, double factor){
 
   extern double (*(*var)[])[];
   extern double (*(*expect)[])[];
@@ -712,7 +712,7 @@ double (*find_information(struct treenode *tree,struct treenode *tree2,unsigned 
   extern int is_kappa;
  
   int a,b,d;
-  double (*det)[];
+  double *det;
 
   CreatePMats ();
   
@@ -720,7 +720,7 @@ double (*find_information(struct treenode *tree,struct treenode *tree2,unsigned 
    * If sampling then sample to estimate the nth percentile*/
   if(ISMODE(PERCENTILE)){
     det=calloc(1,sizeof(double));
-    (*det)[0]=sample_percentile(tree,tree2,e,factor_flag,factor);
+    det[0]=sample_percentile(tree,tree2,e,factor_flag,factor);
     if(ISMODE(CACHE))
       wipe_cache();
   }
