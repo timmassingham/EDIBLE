@@ -149,62 +149,6 @@ double * determinant(void){
   return det;
 }
 
-
-/*  Routine to take given matrix and perform LU
- * factorisation with row pivoting on it.
- *  Returns the number of pivots used in calculation.
- * Will fail for extremely degenerate matrices (all
- * possible choices of pivot down rows are zero.) In which
- * case, expect divide by zero error.
- *  Assumes matrix is symmetric - is the case when we will 
- * be using the routine*/
-int ludecomp(double (*(*matrix)[])[],int max){
-  int level;
-  int pivots;
-  int a,b;
-  double (*row)[];
-  double elt;
-
-  level=0;
-  pivots=0;
-
-  /*  Go through all the rows from the top to bottom*/
-  while(level<(max-1)){
-    b=level;
-    /*  In general we are best using the entry in the
-     * row with the greatest absolute value as a pivot.
-     * Doing this switch multiplies the determinant by -1*/
-    for(a=level;a<max;a++)
-      b=(fabs((*(*matrix)[a])[level])>fabs((*(*matrix)[b])[level]))?a:b;
-    if(b!=level){
-      row=(*matrix)[b];
-      (*matrix)[b]=(*matrix)[level];
-      (*matrix)[level]=row;
-      pivots++;
-    }
-
-    /*  Pivot element*/
-    elt=(*(*matrix)[level])[level];
-    /*  If pivot is very small, then all the elements must be
-     * almost zero and the method is unreliable at best - die
-     * with determinant 0*/
-    if(fabs(elt)<1e-50)
-      return -1;
-
-    /*  Scale all the row by the pivot element*/
-    for(a=(level+1);a<max;a++)
-      (*(*matrix)[a])[level]/=elt;
-    /*  Subtract new row from all remaining rows*/
-    for(a=(level+1);a<max;a++)
-      for(b=(level+1);b<=a;b++){  /*  Use the symmetry of the matrix*/
-        (*(*matrix)[a])[b]-=(*(*matrix)[a])[level]*(*(*matrix)[level])[b];
-        (*(*matrix)[b])[a]=(*(*matrix)[a])[b];
-      }
-    level++;
-  }
-  return pivots;
-}
-
 /*  Modification to getc to ignore white space*/
 char getnextc(FILE *fp){
   char a;
