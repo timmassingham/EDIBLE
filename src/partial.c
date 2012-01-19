@@ -10,7 +10,7 @@
 
 /*  Starts off calculation of likelihood of given
  * tree.*/
-void partialcalc(struct treenode *node_p, double (*matrix)[], int twig){
+void partialcalc(struct treenode *node_p, double *matrix, int twig){
   extern int branches;
   int a,b,n,r;
   double l,llh, llhr;
@@ -52,7 +52,7 @@ void partialcalc(struct treenode *node_p, double (*matrix)[], int twig){
 
     llh += rate_prob[r] * rate_cat[r] * llhr;    
   }
-  (*matrix)[twig] = llh;
+  matrix[twig] = llh;
   
   llh = 0.;
   for ( r=0 ; r<nrates ; r++){
@@ -73,7 +73,7 @@ void partialcalc(struct treenode *node_p, double (*matrix)[], int twig){
 
     llh += rate_prob[r] * rate_cat[r] * rate_cat[r] * llhr;    
   }
-  (*matrix)[twig+branches] = llh;  
+  matrix[twig+branches] = llh;  
 }
 
 void partialcalc_branch(struct treenode *node_p, int twig, int deriv, int r){
@@ -124,13 +124,13 @@ void partialcalc_branch(struct treenode *node_p, int twig, int deriv, int r){
 
 /*  Routine to calculate the conversion matrix between
  * the rooted and unrooted forms of the tree.*/
-int (*(*findspade(struct treenode *node_p))[])[]{
+int **findspade(struct treenode *node_p){
   extern int branches;
   extern int nodecount;
   extern int root;
   extern int mode;
   extern struct treenode *branch[];
-  int (*(*conv_matrix)[])[];
+  int **conv_matrix;
   int a,c,end,is_k=0;
   struct treenode *node_c;
 
@@ -147,8 +147,8 @@ int (*(*findspade(struct treenode *node_p))[])[]{
   if(conv_matrix==NULL)
     nomemory();
   for(a=0;a<(nodecount+c);a++){
-    (*conv_matrix)[a]=calloc(branches+is_k,sizeof(int));
-    if((*conv_matrix)[a]==NULL)
+    conv_matrix[a]=calloc(branches+is_k,sizeof(int));
+    if(conv_matrix[a]==NULL)
       nomemory();
   }
 
@@ -157,11 +157,11 @@ int (*(*findspade(struct treenode *node_p))[])[]{
  * Doing basic set up for the matrix*/
   for(a=0;a<branches;a++){
     sscanf((branch[a]->node[0])->name,"Node-%d",&end);
-    (*(*conv_matrix)[end])[a]=1;
+    conv_matrix[end][a]=1;
     end=-1;
     sscanf(branch[a]->name,"Node-%d",&end);
     if(end!=-1)
-      (*(*conv_matrix)[end])[a]=-1;
+      conv_matrix[end][a]=-1;
   }
   node_c=branch[root];
 
@@ -172,10 +172,10 @@ int (*(*findspade(struct treenode *node_p))[])[]{
     sscanf((node_c->node[0])->name,"Node-%d",&end);
     a=0;
     while(branch[a]!=node_c){a++;}
-    (*(*conv_matrix)[end])[a]=-1;
+    conv_matrix[end][a]=-1;
     a=0;
     while(branch[a]!=node_c->node[0]){a++;}
-    (*(*conv_matrix)[end])[a]=1;
+    conv_matrix[end][a]=1;
     node_c=node_c->node[0];
   }
 
@@ -183,20 +183,20 @@ int (*(*findspade(struct treenode *node_p))[])[]{
   /* Deal with end case if we have "floating" genetic root*/
   if(NOTMODE(NODEASROOT)){
   /*  Root node has different behaviour from the others*/
-    (*(*conv_matrix)[nodecount+1])[root]=2;
+    conv_matrix[nodecount+1][root]=2;
     a=0;
     while(branch[a]!=node_c){a++;}
-    (*(*conv_matrix)[0])[a]=-1;
+    conv_matrix[0][a]=-1;
   }
   else{
     sscanf((branch[root]->node[0])->name,"Node-%d",&end);   
-    (*(*conv_matrix)[end])[root]=1;
+    conv_matrix[end][root]=1;
   }
   
   /*  If we are using the HKY85 model, the information relating to
    * kappa doesn't change in the rooted case*/
   if(ISMODE(HKY) && NOTMODE(NOKAPPA))
-    (*(*conv_matrix)[nodecount+c-1])[branches]=1;
+    conv_matrix[nodecount+c-1][branches]=1;
   
   return conv_matrix;
 }

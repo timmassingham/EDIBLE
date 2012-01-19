@@ -14,8 +14,8 @@ void main(int argc, char *argv[]){
   FILE *input_file_p;
   FILE *output_file_p;
   int sample_size,sequence_length,pt;
-  double (*points)[];
-  double (*results)[];
+  double *points;
+  double *results;
   struct percentile *percent, *temp;
   int max_percentiles,j,k,min_percentiles,m;
   double a;
@@ -87,7 +87,7 @@ void main(int argc, char *argv[]){
    * (easier to sort and use)*/
 							  
   for(j=0;j<max_percentiles;j++){
-    (*points)[j]=percent->point;
+    points[j]=percent->point;
     temp=percent;
     percent=percent->next;
     free(temp);
@@ -99,13 +99,13 @@ void main(int argc, char *argv[]){
 
   /*  Check to see if any of the points can't be calculated, must be 
    * inbetween two of the sampled points to be used*/
-  while((int)(sample_size*(*points)[max_percentiles-1]+0.5)>sample_size-1){
-    printf("%e too large for interpolation.\n",(*points)[max_percentiles-1]*100);
+  while((int)(sample_size*points[max_percentiles-1]+0.5)>sample_size-1){
+    printf("%e too large for interpolation.\n",points[max_percentiles-1]*100);
     max_percentiles--;
   }
   min_percentiles=0;
-  while((int)(sample_size*(*points)[min_percentiles]+0.5)<1){
-    printf("%e too small for interpolation.\n",(*points)[min_percentiles]*100);
+  while((int)(sample_size*points[min_percentiles]+0.5)<1){
+    printf("%e too small for interpolation.\n",points[min_percentiles]*100);
     min_percentiles++;
   }
   
@@ -146,16 +146,16 @@ void main(int argc, char *argv[]){
     /*  Scan in the sampled values into an array*/
     a=0;
     for(k=0;k<sample_size;k++){
-      fscanf(input_file_p,"%le",&(*results)[k]);
-      a+=(*results)[k];
+      fscanf(input_file_p,"%le",&results[k]);
+      a+=results[k];
     }
     /*  Print the mean and then interpolate all the percentile points*/
     fprintf(output_file_p,"#Sample mean=%e\n",(double)(a/sample_size));
     for(k=min_percentiles;k<max_percentiles;k++){
-      m=(int)((*points)[k]*sample_size+1.5);
-      a=(*results)[m-2]+((*points)[k]*sample_size+1.5-m)
-	*((*results)[k-1]-(*results)[k-2]);
-      fprintf(output_file_p,"%e\t%e\n",(*points)[k],a);
+      m=(int)(points[k]*sample_size+1.5);
+      a=results[m-2]+(points[k]*sample_size+1.5-m)
+	*(results[k-1]-results[k-2]);
+      fprintf(output_file_p,"%e\t%e\n",points[k],a);
     } 
     fprintf(output_file_p,"\n");
     ch=getc(input_file_p);

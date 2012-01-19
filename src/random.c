@@ -20,8 +20,8 @@ double sample_percentile(struct treenode *node_p, struct treenode *tree2,unsigne
   double information;
   extern double percentile;
   extern int is_kappa;
-  double (*percent)[];
-  double (*(*partial)[])[];
+  double *percent;
+  double **partial;
 
   /*  Make copy of our tree (so we can reuse some of the already
    * calculate values*/
@@ -40,8 +40,8 @@ double sample_percentile(struct treenode *node_p, struct treenode *tree2,unsigne
   if(partial==NULL)
     nomemory();
   for(a=0;a<(branches+1+is_kappa);a++){
-    (*partial)[a]=calloc(branches+1+is_kappa,sizeof(double));
-    if((*partial)[a]==NULL)
+    partial[a]=calloc(branches+1+is_kappa,sizeof(double));
+    if(partial[a]==NULL)
       nomemory();
   }
     
@@ -52,7 +52,7 @@ double sample_percentile(struct treenode *node_p, struct treenode *tree2,unsigne
   if(percent==NULL)
     nomemory();
   for(a=0;a<percent_point;a++)
-    (*percent)[a]=DBL_MAX;
+    percent[a]=DBL_MAX;
 
   /*  Sample from distribution, keeping only the bottom so many 
    * results (depending on what percentile point we are trying 
@@ -65,16 +65,16 @@ double sample_percentile(struct treenode *node_p, struct treenode *tree2,unsigne
 /*  Calculate the weighted median of the data set -
  * interpolates between the last two values to get a
  * "more accurate" estimate.*/
-  information=(*percent)[percent_point-2]
+  information=percent[percent_point-2]
              +(percentile*sample_size+1.5-percent_point)
-             *((*percent)[percent_point-1]-(*percent)[percent_point-2]);
+             *(percent[percent_point-1]-percent[percent_point-2]);
 
   for(a=0;a<(branches+1+is_kappa);a++)
-    free((*partial)[a]);
+    free(partial[a]);
   free(partial);
   if(sample_file_p!=NULL){
     for(a=0;a<sample_size;a++)
-      fprintf(sample_file_p,"%e\n",(*percent)[a]);
+      fprintf(sample_file_p,"%e\n",percent[a]);
   }
   free(percent);
 
@@ -84,17 +84,17 @@ double sample_percentile(struct treenode *node_p, struct treenode *tree2,unsigne
 
 /*  Routine to return a result from an experiment generated
  * randomly.*/
-double randomresult(struct treenode *node_p, struct treenode *tree,double (*(*partial)[])[],unsigned int e,int sequence,int factor_flag,double factor){
+double randomresult(struct treenode *node_p, struct treenode *tree,double **partial,unsigned int e,int sequence,int factor_flag,double factor){
   int a,c,d;
   double *data;
   double b;
   extern int branches;
-  extern double (*(*expect)[])[];
+  extern double **expect;
   extern int mode;
   
   for(a=0;a<branches;a++)
     for(c=0;c<(a+1);c++) 
-      (*(*expect)[a])[c]=0;
+      expect[a][c]=0;
  
   for(d=0;d<sequence;d++){
     /*   Get a new sample from the distribution*/
@@ -102,20 +102,20 @@ double randomresult(struct treenode *node_p, struct treenode *tree,double (*(*pa
     
     for(a=0;a<branches;a++)  /* Add new entry to expectation matrix*/
       for(c=0;c<(a+1);c++){
-        (*(*expect)[a])[c]+=evaluate_information(partial,a,c);
-        (*(*expect)[c])[a]=(*(*expect)[a])[c];
+        expect[a][c]+=evaluate_information(partial,a,c);
+        expect[c][a]=expect[a][c];
       }
     if(ISMODE(HKY) && NOTMODE(NOKAPPA))
-      (*(*expect)[branches])[branches]+=evaluate_information(partial,branches+1,branches+1);
+      expect[branches][branches]+=evaluate_information(partial,branches+1,branches+1);
   }
 
   /*  The estimate of the expected information is the sum of the
    * observed informations/number of results*/
   for(a=0;a<branches;a++)
     for(c=0;c<branches;c++)
-      (*(*expect)[a])[c]/=sequence;
+      expect[a][c]/=sequence;
   if(ISMODE(HKY) && NOTMODE(NOKAPPA))
-    (*(*expect)[branches])[branches]/=sequence;
+    expect[branches][branches]/=sequence;
 
   /*  Not having to worry about variance calculation (ATM;-)
    * scaling of information about kappa is more complicated and so
@@ -175,21 +175,21 @@ long randoms(void){
 
 /*  Routine to place element in its correct place in an array
  * knocking off elements off the end if necessary*/
-void reorder(double (*percent)[],double information,int percent_point){
+void reorder(double *percent,double information,int percent_point){
   extern int sample_size;
   int a,b;
   double d,e;
 
   a=0;
-  while(a<sample_size && (*percent)[a]<information){a++;}
+  while(a<sample_size && percent[a]<information){a++;}
 
   /*  Else move all the elements of the array along one
    * and dumps the one which falls off the end*/
-  d=(*percent)[a];
-  (*percent)[a]=information;
+  d=percent[a];
+  percent[a]=information;
   for(b=++a;b<sample_size;b++){
-    e=(*percent)[b];
-    (*percent)[b]=d;
+    e=percent[b];
+    percent[b]=d;
     d=e;
   }
 }
@@ -218,35 +218,35 @@ int evolve_nucleotide(double length, int start_nucleotide){
 
 /*  Check to see if the current tree is in the cache and return 
  * a pointer to it matrix if it is. NULL if not*/
-double (*(*check_cache(void))[])[]{
+double **check_cache(void){
   extern struct treenode *leaf[];
   extern int leaves;
-  extern struct crecord (*cache)[];
+  extern struct crecord *cache;
   extern int cache_size;
   extern int mode;
   
   int a,b,match=0;
-  double (*(*temp)[])[];
+  double **temp;
   
   temp=NULL;
   if(NOTMODE(CACHE))
     return temp;
   
-  for(a=0;a<cache_size && match==0 && (*(*cache)[a].leaf_nucleotide)[0]!=-1;a++){
+  for(a=0;a<cache_size && match==0 && cache[a].leaf_nucleotide[0]!=-1;a++){
     match=1;
     for(b=0;b<leaves && match==1;b++)
-      if((*(*cache)[a].leaf_nucleotide)[b]!=leaf[b]->nucleotide)
+      if(cache[a].leaf_nucleotide[b]!=leaf[b]->nucleotide)
 	match=0;
     if(match==1)
-      temp=(*cache)[a].matrix;
+      temp=cache[a].matrix;
   }
   
   return temp;
 }
 
 /*  See if we can fit the result generated into cache*/
-void update_cache(double (*(*matrix)[])[]){
-  extern struct crecord (*cache)[];
+void update_cache(double **matrix){
+  extern struct crecord *cache;
   extern int cache_size;
   extern struct treenode *leaf[];
   extern int mode;
@@ -260,30 +260,30 @@ void update_cache(double (*(*matrix)[])[]){
     is_kappa=1;
   
   b=0;
-  for(a=0;a<cache_size && (*(*cache)[a].leaf_nucleotide)[0]!=-1;a++)
-    if((*(*(*cache)[a].matrix)[branches])[branches]
-       <(*(*(*cache)[b].matrix)[branches])[branches])
+  for(a=0;a<cache_size && cache[a].leaf_nucleotide[0]!=-1;a++)
+    if(cache[a].matrix[branches][branches]
+       <cache[b].matrix[branches][branches])
       b=a;
 
   if(a!=cache_size)
     b=a;
   else
-    if((*(*(*cache)[b].matrix)[branches])[branches]>(*(*matrix)[branches])[branches])
+    if(cache[b].matrix[branches][branches]>matrix[branches][branches])
       return;
   
   for(i=0;i<leaves;i++)
-    (*(*cache)[b].leaf_nucleotide)[i]=leaf[i]->nucleotide;
+    cache[b].leaf_nucleotide[i]=leaf[i]->nucleotide;
   for(i=0;i<branches+is_kappa+1;i++)
     for(j=0;j<branches+is_kappa+1;j++)
-      (*(*(*cache)[b].matrix)[i])[j]=(*(*matrix)[i])[j];
+      cache[b].matrix[i][j]=matrix[i][j];
 }
 
 /*  Clean the cache for another round of results to be generated*/
 void wipe_cache(void){
-  extern struct crecord (*cache)[];
+  extern struct crecord *cache;
   extern int cache_size;
   int a;
   
   for(a=0;a<cache_size;a++)
-    (*(*cache)[a].leaf_nucleotide)[0]=-1;
+    cache[a].leaf_nucleotide[0]=-1;
 }

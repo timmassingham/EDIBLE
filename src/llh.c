@@ -10,7 +10,7 @@
 
 /*  Main routine to calculate the likelihood and
  * partial derivatives matrix of the tree*/
-void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, double (*(*matrix)[])[]){
+void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, double **matrix){
   int b,c;
 
   extern int branches;
@@ -22,12 +22,12 @@ void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, dou
   extern FILE *prob_file_p;
   extern double kappa;
   extern int is_kappa;
-  extern double (*(*rootedexpect)[])[];
+  extern double **rootedexpect;
   
-  double (*partial)[];
-  double (*rootedpartial)[];
+  double *partial;
+  double *rootedpartial;
   double temp;
-  double (*(*cache_hit)[])[];
+  double **cache_hit;
   
   /*  Makeleaf array point to tree starting at node_p*/
   leaves=0;
@@ -59,29 +59,29 @@ void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, dou
 	is_kappa=1;
       for(b=0;b<branches+is_kappa+1;b++)
 	for(c=0;c<branches+is_kappa+1;c++)
-	  (*(*matrix)[b])[c]=(*(*cache_hit)[b])[c];
+	  matrix[b][c]=cache_hit[b][c];
       is_kappa=0;
       
       /*  Dump necessary information to files*/
       if(ISMODE(PROBS)){
 	fprintf(prob_file_p,"\t\t");
-	fprintf(prob_file_p,"%e\t",(*(*matrix)[branches])[branches]);
+	fprintf(prob_file_p,"%e\t",matrix[branches][branches]);
 	if(ISMODE(INDIVIDUAL) && individual==1){
 	  if(ISMODE(ROOTED)){
 	    planttree(matrix,rootedexpect);
-	    rooted_derivative((*matrix)[branches],rootedpartial);
-	    fprintf(prob_file_p,"%e\t%e\t",(*rootedpartial)[interesting_branches[0]]*(*rootedpartial)[interesting_branches[0]]
-		    /((*(*matrix)[branches])[branches]*(*(*matrix)[branches])[branches])
-		    -(*(*rootedexpect)[interesting_branches[0]])[interesting_branches[0]]/(*(*matrix)[branches])[branches]
-		    ,(*rootedpartial)[interesting_branches[0]]);
-	    fprintf(prob_file_p,"%e",(*(*rootedexpect)[interesting_branches[0]])[interesting_branches[0]]);
+	    rooted_derivative(matrix[branches],rootedpartial);
+	    fprintf(prob_file_p,"%e\t%e\t",rootedpartial[interesting_branches[0]]*rootedpartial[interesting_branches[0]]
+		    /(matrix[branches][branches]*matrix[branches][branches])
+		    -rootedexpect[interesting_branches[0]][interesting_branches[0]]/matrix[branches][branches]
+		    ,rootedpartial[interesting_branches[0]]);
+	    fprintf(prob_file_p,"%e",rootedexpect[interesting_branches[0]][interesting_branches[0]]);
 	  }
 	  else{
-	    fprintf(prob_file_p,"%e\t%e\t",(*(*matrix)[branches])[interesting_branches[0]]*(*(*matrix)[branches])[interesting_branches[0]]
-		    /((*(*matrix)[branches])[branches]*(*(*matrix)[branches])[branches])
-		    -(*(*matrix)[interesting_branches[0]])[interesting_branches[0]]/(*(*matrix)[branches])[branches]
-		    ,(*(*matrix)[branches])[interesting_branches[0]]);
-	    fprintf(prob_file_p,"%e",(*(*matrix)[interesting_branches[0]])[interesting_branches[0]]);
+	    fprintf(prob_file_p,"%e\t%e\t",matrix[branches][interesting_branches[0]]*matrix[branches][interesting_branches[0]]
+		    /(matrix[branches][branches]*matrix[branches][branches])
+		    -matrix[interesting_branches[0]][interesting_branches[0]]/matrix[branches][branches]
+		    ,matrix[branches][interesting_branches[0]]);
+	    fprintf(prob_file_p,"%e",matrix[interesting_branches[0]][interesting_branches[0]]);
 	  }
 	}
 	fprintf(prob_file_p,"\n");
@@ -98,7 +98,7 @@ void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, dou
   
   /*  Calculate likelihood and partial derivatives.
    * also generates a sequence in boot strap case*/
-  (*(*matrix)[branches])[branches]=llhcalc(node_p);
+  matrix[branches][branches]=llhcalc(node_p);
 
   /*   Make a copy of the tree and calculate the partial 
    * derivatives for each branch and store in newly acquired array*/
@@ -118,8 +118,8 @@ void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, dou
     /*  Do the first evaluation llh(x+dx)*/
     kappa+=DELTA;
     do_rate();
-    (*(*matrix)[branches])[branches+1]=llhcalc(node_p);
-    (*(*matrix)[branches+1])[branches+1]=(*(*matrix)[branches])[branches+1];
+    matrix[branches][branches+1]=llhcalc(node_p);
+    matrix[branches+1][branches+1]=matrix[branches][branches+1];
 
     /*  The second evaluation llh(x-dx)*/
     kappa-=2*DELTA;
@@ -127,13 +127,13 @@ void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, dou
     temp=llhcalc(node_p);
 
     /*  dllh/dx~[f(x+dx)-f(x-dx)]/(2*DELTA)*/
-    (*(*matrix)[branches])[branches+1]-=temp;
-    (*(*matrix)[branches])[branches+1]/=2*DELTA;
+    matrix[branches][branches+1]-=temp;
+    matrix[branches][branches+1]/=2*DELTA;
     
     /*  d2llh/dx2~[f(x+dx)+f(x-dx)-2*f(x)]/(DELTA*DELTA)*/
-    (*(*matrix)[branches+1])[branches+1]+=temp;
-    (*(*matrix)[branches+1])[branches+1]-=2*(*(*matrix)[branches])[branches];
-    (*(*matrix)[branches+1])[branches+1]/=DELTA*DELTA;
+    matrix[branches+1][branches+1]+=temp;
+    matrix[branches+1][branches+1]-=2*matrix[branches][branches];
+    matrix[branches+1][branches+1]/=DELTA*DELTA;
 
     /*  Reset the rates and so on*/
     kappa+=DELTA;
@@ -146,12 +146,12 @@ void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, dou
    * derivatives are returned as 0*/
   for(b=0;b<branches;b++){
     for(c=0;c<(b+1);c++){
-    (*(*matrix)[b])[c]=second_derivative(tree2,partial,b,c);
+    matrix[b][c]=second_derivative(tree2,partial,b,c);
     /*  We have symmetry*/
-    (*(*matrix)[c])[b]=(*(*matrix)[b])[c];
+    matrix[c][b]=matrix[b][c];
     }
     /*  Fill in the first order partial derivatives*/
-    (*(*matrix)[branches])[b]=(*partial)[b];
+    matrix[branches][b]=partial[b];
   }
 
   /*  Free the additional memory used*/
@@ -160,23 +160,23 @@ void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, dou
   /*  Dump necessary information to files*/
   if(ISMODE(PROBS)){
     fprintf(prob_file_p,"\t\t");
-    fprintf(prob_file_p,"%e\t",(*(*matrix)[branches])[branches]);
+    fprintf(prob_file_p,"%e\t",matrix[branches][branches]);
     if(ISMODE(INDIVIDUAL) && individual==1){
       if(ISMODE(ROOTED)){
         planttree(matrix,rootedexpect);
-        rooted_derivative((*matrix)[branches],rootedpartial);
-        fprintf(prob_file_p,"%e\t%e\t",(*rootedpartial)[interesting_branches[0]]*(*rootedpartial)[interesting_branches[0]]
-                /((*(*matrix)[branches])[branches]*(*(*matrix)[branches])[branches])
-                -(*(*rootedexpect)[interesting_branches[0]])[interesting_branches[0]]/(*(*matrix)[branches])[branches]
-                ,(*rootedpartial)[interesting_branches[0]]);
-        fprintf(prob_file_p,"%e",(*(*rootedexpect)[interesting_branches[0]])[interesting_branches[0]]);
+        rooted_derivative(matrix[branches],rootedpartial);
+        fprintf(prob_file_p,"%e\t%e\t",rootedpartial[interesting_branches[0]]*rootedpartial[interesting_branches[0]]
+                /(matrix[branches][branches]*matrix[branches][branches])
+                -rootedexpect[interesting_branches[0]][interesting_branches[0]]/matrix[branches][branches]
+                ,rootedpartial[interesting_branches[0]]);
+        fprintf(prob_file_p,"%e",rootedexpect[interesting_branches[0]][interesting_branches[0]]);
       }
       else{
-        fprintf(prob_file_p,"%e\t%e\t",(*(*matrix)[branches])[interesting_branches[0]]*(*(*matrix)[branches])[interesting_branches[0]]
-	        /((*(*matrix)[branches])[branches]*(*(*matrix)[branches])[branches])
-	        -(*(*matrix)[interesting_branches[0]])[interesting_branches[0]]/(*(*matrix)[branches])[branches]
-	        ,(*(*matrix)[branches])[interesting_branches[0]]);
-        fprintf(prob_file_p,"%e",(*(*matrix)[interesting_branches[0]])[interesting_branches[0]]);
+        fprintf(prob_file_p,"%e\t%e\t",matrix[branches][interesting_branches[0]]*matrix[branches][interesting_branches[0]]
+	        /(matrix[branches][branches]*matrix[branches][branches])
+	        -matrix[interesting_branches[0]][interesting_branches[0]]/matrix[branches][branches]
+	        ,matrix[branches][interesting_branches[0]]);
+        fprintf(prob_file_p,"%e",matrix[interesting_branches[0]][interesting_branches[0]]);
       }
     }
     fprintf(prob_file_p,"\n");
@@ -322,7 +322,7 @@ void llhvector(struct treenode *node_p,int a,int derivative, int r){
 
   for(b=0;b<4;b++)
     for(c=0;c<4;c++){
-      llhmatrix[c][b]=(*prob_function)(c,b,node_p->bnum,r);
+      llhmatrix[c][b]=prob_function(c,b,node_p->bnum,r);
     }
 /*  Main code to calculate the partial likelihoods
  * and save in the llh vector at the node*/
@@ -465,7 +465,7 @@ double prob_calcd2(int from, int to, double length){
 
 /*  Routine to calculate the second derivatives of
  * the likelihood*/
-double second_derivative(struct treenode *node_p,double (*matrix)[],int b1,int b2){
+double second_derivative(struct treenode *node_p,double *matrix,int b1,int b2){
   extern int branches;
   extern int individual;
   extern int kudge;
@@ -476,7 +476,7 @@ double second_derivative(struct treenode *node_p,double (*matrix)[],int b1,int b
 
   
   if(b1==b2)
-    return (*matrix)[b1+branches];
+    return matrix[b1+branches];
   /*  If we are not sampling, the expectation of the second derivatives is zero
    * and we can just ignore them. On the other hand if we are sampling of doing variance
    * calculations, all the second derivatives are needed*/
@@ -496,11 +496,11 @@ double second_derivative(struct treenode *node_p,double (*matrix)[],int b1,int b
 
 /*  Routine to evolve a sequence down the tree and then check if
  * the evolved sequence is in the cache*/
-double (*(*pcalc(struct treenode *node_p))[])[]{
+double **pcalc(struct treenode *node_p){
   extern double p[4];
   int a,n;
   double l;
-  double (*(*temp)[])[];
+  double **temp;
   
   /*  Generate the original ancestor from the base frequencies*/
   l=randomd();

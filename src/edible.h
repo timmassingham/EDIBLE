@@ -57,26 +57,26 @@ struct treenode{
 };
 
 struct crecord{
-  double (*(*matrix)[])[];
-  int (*leaf_nucleotide)[];
+  double **matrix;
+  int *leaf_nucleotide;
 };
 
 /* Functions from read.c*/
 void readtree(char *file, struct treenode *snodes);
 void makenode(FILE *fp,struct treenode *node_p,int flag);
 void printnode(struct treenode *node_p,int flag,FILE *fp);
-void dump(double (*(*matrix)[])[],int maxi,char *s);
+void dump(double **matrix,int maxi,char *s);
 
 /* Functions from llh.c*/
-void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, double (*(*matrix)[])[]);
+void calcllhs(struct treenode *node_p,struct treenode *tree2,unsigned int a, double **matrix);
 double llhcalc(struct treenode *node_p);
 void llhcalc_branch(struct treenode *node_p, int r);
 void llhvector(struct treenode *node_p,int a,int derivative, int r);
 double prob_calc(int from, int to, double length);
 double prob_calcd(int from, int to, double length);
 double prob_calcd2(int from, int to, double length);
-double second_derivative(struct treenode *node_p,double (*matrix)[],int b1,int b2);
-double (*(*pcalc(struct treenode *node_p))[])[];
+double second_derivative(struct treenode *node_p,double *matrix,int b1,int b2);
+double **pcalc(struct treenode *node_p);
 void pcalc_branch(struct treenode *node_p);
 
 /* Functions from utility.c*/
@@ -84,25 +84,25 @@ int ipow(int x, int y);
 void nomemory(void);
 char *itotext(int n,char *s);
 double * determinant(void);
-int ludecomp(double (*(*matrix)[])[],int max);
+int ludecomp(double **matrix,int max);
 char getnextc(FILE *fp);
 void print_nucleotide(int nucleo, FILE *fp);
 void initialise_rg(void);
 void tree_sequence(unsigned int a);
-double evaluate_information(double (*(*matrix)[])[],const int a,const int b);
+double evaluate_information(double **matrix,const int a,const int b);
 void do_rate(void);
 void thick_sort(int array[],int length);
 
 /* Functions from partial.c*/
-void partialcalc(struct treenode *node_p, double (*matrix)[], int twig);
+void partialcalc(struct treenode *node_p, double *matrix, int twig);
 void partialcalc_branch(struct treenode *node_p, int twig, int deriv, int r);
-int (*(*findspade(struct treenode *node_p))[])[];
+int **findspade(struct treenode *node_p);
 
 /* Functions from matrix.c*/
 void expectation(unsigned int e,double factor,int factor_flag,struct treenode *tree, struct treenode *tree2);
-double (*variance(unsigned int e))[];
-void planttree(double (*(*original_matrix)[])[],double (*(*new_matrix)[])[]);
-void rooted_derivative(double (*original_vector)[],double (*new_vector)[]);
+double *variance(unsigned int e);
+void planttree(double **original_matrix,double **new_matrix);
+void rooted_derivative(double *original_vector,double *new_vector);
 
 /* Functions from options.c*/
 void standard(struct treenode *node_p,FILE *file_p,unsigned int e);
@@ -116,16 +116,16 @@ struct treenode *treecopy(struct treenode *node2_p,int flag);
 void filltree(struct treenode *from, struct treenode *node_p,int flag);
 void doleaf(struct treenode *node_p,int flag);
 int findnode(struct treenode *node1_p,struct treenode *node2_p);
-void scale_tree(int factor_flag,double factor, double (*(*expect)[])[],int rows);
+void scale_tree(int factor_flag,double factor, double **expect,int rows);
 void print_tree(struct treenode *node_p, FILE *fp, int flag);
 
 /* Functions from random.c*/
 double sample_percentile(struct treenode *node_p,struct treenode *tree2, unsigned int e,int factor_flag,double factor);
-double randomresult(struct treenode *node_p,struct treenode *tree,double (*(*partial)[])[],unsigned int e,int sequence, int factor_flag, double factor);
+double randomresult(struct treenode *node_p,struct treenode *tree,double **partial,unsigned int e,int sequence, int factor_flag, double factor);
 double randomd(void);
 long randoms(void);
-void reorder(double (*percent)[],double information,int percent_point);
+void reorder(double *percent,double information,int percent_point);
 int evolve_nucleotide(double length, int start_nucleotide);
-double (*(*check_cache(void))[])[];
-void update_cache(double (*(*matrix)[])[]);
+double **check_cache(void);
+void update_cache(double **matrix);
 void wipe_cache(void);

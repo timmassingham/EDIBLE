@@ -31,7 +31,7 @@ FILE *sample_file_p;
 int sequence_length, sample_size;
 int boot_strap_size;
 int cache_size=0;
-struct crecord (*cache)[];
+struct crecord *cache;
 
 double percentile;
 int mode=0;
@@ -45,11 +45,11 @@ int mode=0;
  *         +4096 use cache when sampling*/
 int root=0;
 int individual=0;
-int (*(*conv_matrix)[])[];
-double (*(*expect)[])[];
-double (*(*var)[])[];
-double (*(*var2)[])[];
-double (*(*rootedexpect)[])[];
+int **conv_matrix;
+double **expect;
+double **var;
+double **var2;
+double **rootedexpect;
 char *outstring;
 int seed;
 int kudge=0,branch1,branch2;
@@ -75,7 +75,7 @@ extern int boot_strap_size;
 extern int sample_size;
 extern int sequence_length;
 extern int cache_size;
-extern struct crecord (*cache)[];
+extern struct crecord *cache;
 extern int leaves;
 extern double percentile;
 extern char *out_file;
@@ -83,10 +83,10 @@ extern FILE *matrix_file_p;
 extern FILE *prob_file_p;
 extern FILE *variance_file_p;
 extern FILE *sample_file_p;
-extern double (*(*expect)[])[];
-extern double (*(*var)[])[];
-extern double (*(*var2)[])[];
-extern double (*(*rootedexpect)[])[];
+extern double **expect;
+extern double **var;
+extern double **var2;
+extern double **rootedexpect;
 extern char *outstring;
 extern struct treenode *leaf[];
 extern int is_kappa;
@@ -339,15 +339,15 @@ readtree(argv[a],&snode);
 /*  If we want to cache results then get memory for the cache*/
 if(ISMODE(CACHE)){
   for(a=0;a<cache_size;a++){
-    (*cache)[a].leaf_nucleotide=calloc(leaves,sizeof(int));
+    cache[a].leaf_nucleotide=calloc(leaves,sizeof(int));
     for(b=0;b<leaves;b++)
-      (*(*cache)[a].leaf_nucleotide)[b]=-1;
-    (*cache)[a].matrix=calloc(branches+1+is_kappa,sizeof(double *));
-    if((*cache)[a].matrix==NULL)
+      cache[a].leaf_nucleotide[b]=-1;
+    cache[a].matrix=calloc(branches+1+is_kappa,sizeof(double *));
+    if(cache[a].matrix==NULL)
       nomemory();
     for(b=0;b<branches+1+is_kappa;b++){
-      (*(*cache)[a].matrix)[b]=calloc(branches+1+is_kappa,sizeof(double));
-      if((*(*cache)[a].matrix)[b]==NULL)
+      cache[a].matrix[b]=calloc(branches+1+is_kappa,sizeof(double));
+      if(cache[a].matrix[b]==NULL)
 	nomemory();
     }
   }
@@ -382,8 +382,8 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
   if(expect==NULL)
     nomemory();
   for(a=0;a<branches+is_kappa;a++){
-    (*expect)[a]=calloc(branches+is_kappa,sizeof(double));
-    if((*expect)[a]==NULL)
+    expect[a]=calloc(branches+is_kappa,sizeof(double));
+    if(expect[a]==NULL)
       nomemory();
   }
   /*  Get memory for the variance matrix, if we are doing variance
@@ -393,8 +393,8 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
     if(var==NULL)
       nomemory();
     for(a=0;a<branches+is_kappa;a++){
-      (*var)[a]=calloc(branches+is_kappa,sizeof(double));
-      if((*var)[a]==NULL)
+      var[a]=calloc(branches+is_kappa,sizeof(double));
+      if(var[a]==NULL)
 	nomemory();
     }
   }
@@ -415,8 +415,8 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
     if(rootedexpect==NULL)
       nomemory();
     for(a=0;a<nodecount+b+is_kappa;a++){
-      (*rootedexpect)[a]=calloc(nodecount+b+is_kappa,sizeof(double));
-      if((*rootedexpect)[a]==NULL)
+      rootedexpect[a]=calloc(nodecount+b+is_kappa,sizeof(double));
+      if(rootedexpect[a]==NULL)
         nomemory();
     }
 
@@ -428,16 +428,16 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
       if(var==NULL)
         nomemory();
       for(a=0;a<nodecount+b+is_kappa;a++){
-        (*var)[a]=calloc(nodecount+b+is_kappa,sizeof(double));
-        if((*var)[a]==NULL)
+        var[a]=calloc(nodecount+b+is_kappa,sizeof(double));
+        if(var[a]==NULL)
           nomemory();
       }
       var2=calloc(nodecount+b+is_kappa,sizeof(double* ));
       if(var2==NULL)
         nomemory();
       for(a=0;a<nodecount+b+is_kappa;a++){
-        (*var2)[a]=calloc(nodecount+b+is_kappa,sizeof(double));
-        if((*var2)[a]==NULL)
+        var2[a]=calloc(nodecount+b+is_kappa,sizeof(double));
+        if(var2[a]==NULL)
           nomemory();
       }
     }
@@ -504,7 +504,7 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
   switch((mode&(DETINDIV+INDIVIDUAL+ROOTED))){
   case 0:
   case ROOTED:
-  case DETINDIV:outstring=calloc(34,sizeof(char));
+  case DETINDIV:outstring=calloc(38,sizeof(char));
 	    string=strcpy(outstring,"Log-determinant of expectation matrix");
 	    break;
   case INDIVIDUAL:   outstring=calloc(25,sizeof(char));
@@ -513,10 +513,10 @@ printf("\nOptions:  1. Calculate the expected information of the tree\n"
   case ROOTED+INDIVIDUAL:  outstring=calloc(28,sizeof(char));
 	    string=strcpy(outstring,"Information about parameter");
 	    break;
-  case DETINDIV+INDIVIDUAL:outstring=calloc(32,sizeof(char));
+  case DETINDIV+INDIVIDUAL:outstring=calloc(36,sizeof(char));
 	    string=strcpy(outstring,"Log-determinate of several branches");
 	    break;
-  case DETINDIV+INDIVIDUAL+ROOTED:outstring=calloc(34,sizeof(char));
+  case DETINDIV+INDIVIDUAL+ROOTED:outstring=calloc(38,sizeof(char));
 	    string=strcpy(outstring,"Log-determinate of several parameters");
 	    break;
   }

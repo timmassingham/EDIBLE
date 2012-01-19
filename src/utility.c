@@ -59,12 +59,12 @@ double * determinant(void){
   double *det;
   extern int mode;
   extern int nodecount;
-  extern double (*(*expect)[])[];
-  extern double (*(*rootedexpect)[])[];
+  extern double **expect;
+  extern double **rootedexpect;
   extern int individual;
   extern int interesting_branches[];
   extern int is_kappa;
-  double (*(*matrix)[])[];
+  double **matrix;
   MAT * matrix2;
 
   is_kappa=0;
@@ -89,9 +89,9 @@ double * determinant(void){
     if(NOTMODE(DETINDIV)){
       det=calloc(individual+is_kappa,sizeof(double));
       for(a=0;a<individual;a++)
-        det[a]=(*(*matrix)[interesting_branches[a]])[interesting_branches[a]];
+        det[a]=matrix[interesting_branches[a]][interesting_branches[a]];
       if(is_kappa==1)
-	det[individual]=(*(*matrix)[max])[max];
+	det[individual]=matrix[max][max];
       is_kappa=0;
       return det;
     }
@@ -110,9 +110,9 @@ double * determinant(void){
      * matrix*/
     for(a=0;a<individual;a++)
       for(c=0;c<individual;c++)
-	matrix2->me[a][c]=(*(*matrix)[interesting_branches[a]])[interesting_branches[c]];
+	matrix2->me[a][c]=matrix[interesting_branches[a]][interesting_branches[c]];
     if(is_kappa==1){
-      matrix2->me[individual][individual]=(*(*matrix)[max])[max];
+      matrix2->me[individual][individual]=matrix[max][max];
     }
     
     max=individual;
@@ -126,7 +126,7 @@ double * determinant(void){
       m_zero(matrix2);
       for ( a=0 ; a<max ; a++){
           for ( c=0 ; c<max ; c++){
-              matrix2->me[a][c] = (*(*matrix)[a])[c];
+              matrix2->me[a][c] = matrix[a][c];
           }
       }
   }
@@ -211,18 +211,18 @@ void tree_sequence(unsigned int a){
 
 /*  Do the information calculation, so the code isn't cluttered with
  * the formula in 8 or so places*/
-double evaluate_information(double (*(*matrix)[])[],const int a,const int b){
+double evaluate_information(double **matrix,const int a,const int b){
   double v;
   extern int mode;
   extern int branches;
 
-  if ( (*(*matrix)[branches])[branches]==0.)
+  if ( matrix[branches][branches]==0.)
     return 0.;
-  v=(*(*matrix)[branches])[a]*(*(*matrix)[branches])[b]/(*(*matrix)[branches])[branches];
+  v=matrix[branches][a]*matrix[branches][b]/matrix[branches][branches];
   if(ISMODE(PERCENTILE) || ISMODE(VARIANCE) || ISMODE(BOOTSTRAP))
-    v=(v-(*(*matrix)[a])[b]);
+    v=(v-matrix[a][b]);
   if(ISMODE(BOOTSTRAP) || ISMODE(PERCENTILE))
-    v/=(*(*matrix)[branches])[branches];
+    v/=matrix[branches][branches];
 
   return v;
 }

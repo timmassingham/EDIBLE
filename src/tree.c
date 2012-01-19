@@ -101,22 +101,22 @@ int findnode(struct treenode *node1_p,struct treenode *node2_p){
 
 /*  Does the correct scaling to the information matrix, given 
 which rates on the tree are changing*/
-void scale_tree(int factor_flag, double factor, double (*(*expect)[])[],int rows){
+void scale_tree(int factor_flag, double factor, double **expect,int rows){
   int a,b;
 
   /*  Multiply necessary informations by correct factor */
   if(factor_flag==-1)/* Multiply all informations*/
     for(a=0;a<rows;a++)
       for(b=0;b<rows;b++)
-        (*(*expect)[a])[b]*=factor*factor;
+        expect[a][b]*=factor*factor;
   else
     /*  We only require factor to be applied to one
      * information. If we are taking the determinant
      * factor applied to all in same row and column 
      * as information*/
     for(a=0;a<rows;a++){
-      (*(*expect)[factor_flag])[a]*=factor;
-      (*(*expect)[a])[factor_flag]*=factor;
+      expect[factor_flag][a]*=factor;
+      expect[a][factor_flag]*=factor;
     }
 }
 

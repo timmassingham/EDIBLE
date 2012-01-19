@@ -702,9 +702,9 @@ void greasebranch(struct treenode *node_p,FILE *file_p,unsigned int e){
 
 double *find_information(struct treenode *tree,struct treenode *tree2,unsigned int e, int factor_flag, double factor){
 
-  extern double (*(*var)[])[];
-  extern double (*(*expect)[])[];
-  extern double (*(*rootedexpect)[])[];
+  extern double **var;
+  extern double **expect;
+  extern double **rootedexpect;
   extern int mode;
   extern int nodecount;
   extern int branches;
@@ -745,19 +745,19 @@ double *find_information(struct treenode *tree,struct treenode *tree2,unsigned i
         planttree(expect,rootedexpect);
         for(a=0;a<d;a++)
           for(b=0;b<d;b++)
-            (*(*var)[a])[b]-=(*(*rootedexpect)[a])[b]*(*(*rootedexpect)[a])[b];
+            var[a][b]-=rootedexpect[a][b]*rootedexpect[a][b];
       }
       /*  Same, but not rooted.*/
       else{
         for(a=0;a<d;a++)
           for(b=0;b<d;b++)
-            (*(*var)[a])[b]-=(*(*expect)[a])[b]*(*(*expect)[a])[b];
+            var[a][b]-=expect[a][b]*expect[a][b];
       }
 
       /*  Dump the calculated variances to a file*/
       for(a=0;a<d;a++){
 	for(b=0;b<d;b++)
-	  fprintf(variance_file_p,"%e,",(*(*var)[a])[b]);
+	  fprintf(variance_file_p,"%e,",var[a][b]);
 	fprintf(variance_file_p,"\n");
       }
       fprintf(variance_file_p,"\n");

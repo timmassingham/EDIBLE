@@ -201,14 +201,14 @@ void printnode(struct treenode *node_p,int flag,FILE *fp){
 }
 
 /*  Routine to dump a matrix to matrix output file   */
-void dump(double (*(*matrix)[])[],int max,char *s){
+void dump(double **matrix,int max,char *s){
   int a,b;
   extern FILE *matrix_file_p;
 
   fprintf(matrix_file_p,"%s\n",s);
   for(a=0;a<max;a++){
     for(b=0;b<max;b++)
-      fprintf(matrix_file_p,"%1.11E,",(*(*matrix)[a])[b]);
+      fprintf(matrix_file_p,"%1.11E,",matrix[a][b]);
     fprintf(matrix_file_p,"\n");
   }
 }
